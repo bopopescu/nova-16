@@ -77,7 +77,7 @@ def _run_command(cmd, cmd_input=None):
 
 
 def _resume_compute(session, compute_ref, compute_uuid):
-    """Resume compute node on slave host after pool join.
+    """Resume compute node on subordinate host after pool join.
 
     This has to happen regardless of the success or failure of the join
     operation.
@@ -93,7 +93,7 @@ def _resume_compute(session, compute_ref, compute_uuid):
                 _run_command(["xe", "vm-start", "uuid=%s" % compute_uuid])
                 return
             except pluginlib.PluginError:
-                logging.exception('Waited %d seconds for the slave to '
+                logging.exception('Waited %d seconds for the subordinate to '
                                   'become available.' % (c * DEFAULT_SLEEP))
                 time.sleep(DEFAULT_SLEEP)
         raise pluginlib.PluginError('Unrecoverable error: the host has '
@@ -417,14 +417,14 @@ def host_start(self, arg_dict):
 def host_join(self, arg_dict):
     """Join a remote host into a pool.
 
-    The pool's master is the host where the plugin is called from. The
+    The pool's main is the host where the plugin is called from. The
     following constraints apply:
 
     - The host must have no VMs running, except nova-compute, which
       will be shut down (and restarted upon pool-join) automatically,
     - The host must have no shared storage currently set up,
-    - The host must have the same license of the master,
-    - The host must have the same supplemental packs as the master.
+    - The host must have the same license of the main,
+    - The host must have the same supplemental packs as the main.
     """
     session = XenAPI.Session(arg_dict.get("url"))
     session.login_with_password(arg_dict.get("user"),
@@ -433,13 +433,13 @@ def host_join(self, arg_dict):
     session.xenapi.VM.clean_shutdown(compute_ref)
     try:
         if arg_dict.get("force"):
-            session.xenapi.pool.join(arg_dict.get("master_addr"),
-                                     arg_dict.get("master_user"),
-                                     arg_dict.get("master_pass"))
+            session.xenapi.pool.join(arg_dict.get("main_addr"),
+                                     arg_dict.get("main_user"),
+                                     arg_dict.get("main_pass"))
         else:
-            session.xenapi.pool.join_force(arg_dict.get("master_addr"),
-                                           arg_dict.get("master_user"),
-                                           arg_dict.get("master_pass"))
+            session.xenapi.pool.join_force(arg_dict.get("main_addr"),
+                                           arg_dict.get("main_user"),
+                                           arg_dict.get("main_pass"))
     finally:
         _resume_compute(session, compute_ref, arg_dict.get("compute_uuid"))
 
